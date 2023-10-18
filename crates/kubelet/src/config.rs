@@ -639,6 +639,7 @@ fn invalid_config_value_error(e: anyhow::Error, value_name: &str) -> anyhow::Err
     e.context(context)
 }
 
+#[cfg(any(feature = "cli", feature = "docs"))]
 fn parse_comma_separated(source: String) -> Vec<String> {
     source.split(',').map(|s| s.trim().to_owned()).collect()
 }
