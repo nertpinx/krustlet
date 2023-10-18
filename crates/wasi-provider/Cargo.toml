@@ -24,7 +24,6 @@ rustls-tls = ["kube/rustls-tls", "kubelet/rustls-tls", "krator/rustls-tls"]
 anyhow = "1.0"
 async-trait = "0.1"
 backtrace = "0.3"
-cap-std = "0.19"
 chrono = {version = "0.4", features = ["serde"]}
 futures = "0.3"
 krator = {version = "0.5", default-features = false}
@@ -44,5 +43,6 @@ wat = "1.0.38"
 wasi-experimental-http-wasmtime = "0.6.0"
 
 [dev-dependencies]
-k8s-openapi = {version = "0.13", default-features = false, features = ["v1_22", "api"]}
+k8s-openapi = {version = "0.21.1", default-features = false, features = ["v1_24"]}
+schemars = "0.8.16"
 oci-distribution = "0.8"

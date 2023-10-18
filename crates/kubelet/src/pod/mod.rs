@@ -312,7 +312,7 @@ impl From<&Pod> for PodKey {
 impl From<KubePod> for PodKey {
     fn from(p: KubePod) -> Self {
         PodKey {
-            name: p.name(),
+            name: p.name_any(),
             namespace: p.namespace().unwrap_or_else(|| "default".to_string()),
         }
     }
@@ -321,7 +321,7 @@ impl From<KubePod> for PodKey {
 impl From<&KubePod> for PodKey {
     fn from(p: &KubePod) -> Self {
         PodKey {
-            name: p.name(),
+            name: p.name_any(),
             namespace: p.namespace().unwrap_or_else(|| "default".to_string()),
         }
     }

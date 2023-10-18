@@ -41,7 +41,7 @@ impl FileSystemWatcher {
                 error!(error = %e, "Unable to send inotify event into stream")
             }
         })?;
-        watcher.configure(Config::PreciseEvents(true))?;
+        watcher.configure(Config::default())?;
 
         watcher.watch(path.as_ref(), RecursiveMode::NonRecursive)?;
 

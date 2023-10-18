@@ -55,12 +55,12 @@ async fn smite_all_integration_test_resources() -> anyhow::Result<&'static str> 
 
     println!("Requested force-delete of all pods; requesting delete of namespaces...");
 
-    Smiter::new(namespaces, None, DeleteParams::default())
+    ClusterSmiter::new(namespaces, DeleteParams::default())
         .smite::<Namespace>(client.clone())
         .await?;
 
     println!("Requesting delete of storage classes...");
-    Smiter::new(storageclasses, None, DeleteParams::default())
+    ClusterSmiter::new(storageclasses, DeleteParams::default())
         .smite::<StorageClass>(client)
         .await?;
 
@@ -103,9 +103,9 @@ async fn smite_namespace_pods(client: kube::Client, namespace: &str) -> anyhow::
 
     println!("Deleting pods in namespace {}...", namespace);
 
-    let smiter = Smiter::new(
+    let smiter = NamespacedSmiter::new(
         names_to_delete,
-        Some(namespace.to_owned()),
+        namespace.to_owned(),
         DeleteParams {
             grace_period_seconds: Some(0),
             ..DeleteParams::default()
@@ -154,15 +154,52 @@ async fn list_storageclasses(client: kube::Client) -> anyhow::Result<Vec<String>
         .collect())
 }
 
-struct Smiter {
+struct NamespacedSmiter {
     names_to_smite: Vec<String>,
-    namespace: Option<String>,
+    namespace: String,
     params: DeleteParams,
 }
 
-impl Smiter {
-    fn new(names_to_smite: Vec<String>, namespace: Option<String>, params: DeleteParams) -> Self {
-        Smiter {
+struct ClusterSmiter {
+    names_to_smite: Vec<String>,
+    params: DeleteParams,
+}
+
+impl ClusterSmiter {
+    fn new(names_to_smite: Vec<String>, params: DeleteParams) -> Self {
+        Self {
+            names_to_smite,
+            params,
+        }
+    }
+
+    async fn smite<T>(self, client: kube::Client) -> anyhow::Result<()>
+    where
+        T: kube::Resource<Scope = kube::core::ClusterResourceScope> + Clone + serde::de::DeserializeOwned + std::fmt::Debug,
+        <T as kube::Resource>::DynamicType: Default,
+    {
+        let api: Api<T> = Api::all(client);
+        let smite_operations = self
+            .names_to_smite
+            .iter()
+            .map(|name| (name, api.clone(), self.params.clone()))
+            .map(|(name, api, params)| async move {
+                api.delete(name, &params).await?;
+                Ok::<_, kube::Error>(())
+            });
+        let smite_results = futures::future::join_all(smite_operations).await;
+        let (_, smite_errors) = smite_results.partition_success();
+
+        if !smite_errors.is_empty() {
+            return Err(smite_failure_error(&smite_errors));
+        }
+        Ok(())
+    }
+}
+
+impl NamespacedSmiter {
+    fn new(names_to_smite: Vec<String>, namespace: String, params: DeleteParams) -> Self {
+        Self {
             names_to_smite,
             namespace,
             params,
@@ -171,13 +208,10 @@ impl Smiter {
 
     async fn smite<T>(self, client: kube::Client) -> anyhow::Result<()>
     where
-        T: kube::Resource + Clone + serde::de::DeserializeOwned + std::fmt::Debug,
+        T: kube::Resource<Scope = kube::core::NamespaceResourceScope> + Clone + serde::de::DeserializeOwned + std::fmt::Debug,
         <T as kube::Resource>::DynamicType: Default,
     {
-        let api: Api<T> = match self.namespace.as_ref() {
-            Some(ns) => Api::namespaced(client, ns),
-            None => Api::all(client),
-        };
+        let api: Api<T> = Api::namespaced(client, &self.namespace);
         let smite_operations = self
             .names_to_smite
             .iter()

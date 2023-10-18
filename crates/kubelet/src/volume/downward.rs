@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::path::Path;
 
 use k8s_openapi::{
     api::core::v1::{

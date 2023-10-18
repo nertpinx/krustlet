@@ -17,7 +17,6 @@ use tracing::{debug, error, instrument, trace, warn};
 use tracing_futures::Instrument;
 
 use std::collections::HashMap;
-use std::convert::TryFrom;
 use std::path::{Path, PathBuf};
 
 #[cfg(target_family = "unix")]

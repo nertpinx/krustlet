@@ -1,6 +1,4 @@
-use std::path::Path;
-
-use k8s_openapi::api::core::v1::{ConfigMap, KeyToPath, Volume as KubeVolume};
+use k8s_openapi::api::core::v1::{ConfigMap, Volume as KubeVolume};
 use k8s_openapi::ByteString;
 use tracing::warn;
 

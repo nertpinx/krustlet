@@ -63,7 +63,7 @@ impl NodeStatusPatcher {
                 patches.push(allocated_patch);
             });
         let patches_value = serde_json::value::Value::Array(patches);
-        json_patch::from_value(patches_value).unwrap()
+        serde_json::from_value(patches_value).unwrap()
     }
 
     async fn do_node_status_patch(&self, patch: json_patch::Patch) -> anyhow::Result<()> {
@@ -142,7 +142,7 @@ mod tests {
                 "value": "2"
             }
         ]);
-        let patch = json_patch::from_value(patch_value).unwrap();
+        let patch = serde_json::from_value(patch_value).unwrap();
         let (update_node_status_sender, _rx) = broadcast::channel(2);
 
         // Create and run a mock Kubernetes API service and get a Kubernetes client

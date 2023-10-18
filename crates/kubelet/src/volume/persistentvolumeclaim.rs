@@ -1,7 +1,5 @@
 use std::collections::BTreeMap;
-use std::path::Path;
 use std::str::FromStr;
-use std::sync::Arc;
 
 use k8s_csi::v1_3_0::node_service_capability::{rpc, Rpc, Type as CapabilityType};
 use k8s_csi::v1_3_0::volume_capability::access_mode::Mode as CSIMode;
@@ -26,7 +24,6 @@ use thiserror::Error;
 use tracing::log::{info, warn};
 
 use crate::grpc_sock;
-use crate::plugin_watcher::PluginRegistry;
 
 use super::*;
 

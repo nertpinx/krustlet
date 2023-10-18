@@ -11,7 +11,7 @@ use k8s_openapi::api::core::v1::ContainerStatus as KubeContainerStatus;
 use k8s_openapi::api::core::v1::Node as KubeNode;
 use k8s_openapi::api::core::v1::Pod as KubePod;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
-use kube::api::{Api, ListParams, ObjectMeta, PatchParams, PostParams};
+use kube::api::{Api, ListParams, ObjectMeta, PatchParams, PostParams, WatchParams};
 use kube::error::ErrorResponse;
 use kube::Error;
 use std::collections::BTreeMap;
@@ -192,10 +192,10 @@ pub async fn evict_pods(client: &kube::Client, node_name: &str) -> anyhow::Resul
     };
     let kube::api::ObjectList { items: pods, .. } = pod_client.list(&params).await?;
 
-    let lp = ListParams::default().fields(&format!("spec.nodeName={}", node_name));
+    let wp = WatchParams::default().fields(&format!("spec.nodeName={}", node_name));
 
     // The delete call may return a "pending" response, we must watch for the actual delete event.
-    let mut stream = pod_client.watch(&lp, "0").await?.boxed();
+    let mut stream = pod_client.watch(&wp, "0").await?.boxed();
 
     info!(num_pods = pods.len(), "Evicting pods");
 

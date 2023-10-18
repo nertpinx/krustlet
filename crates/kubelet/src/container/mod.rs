@@ -2,7 +2,6 @@
 
 use k8s_openapi::api::core::v1::Container as KubeContainer;
 use oci_distribution::Reference;
-use std::convert::TryInto;
 use std::fmt::Display;
 
 mod handle;
