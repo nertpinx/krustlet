@@ -9,7 +9,7 @@ use crate::resources::device_plugin_manager::{serve_device_registry, DeviceManag
 use crate::webserver::start as start_webserver;
 
 use futures::future::{FutureExt, TryFutureExt};
-use kube::api::ListParams;
+use kube_runtime::watcher;
 use std::convert::TryFrom;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -125,12 +125,12 @@ impl<P: Provider> Kubelet<P> {
 
         let operator = PodOperator::new(Arc::clone(&self.provider), client.clone());
         let node_selector = format!("spec.nodeName={}", &self.config.node_name);
-        let params = ListParams {
+        let params = watcher::Config {
             field_selector: Some(node_selector),
             ..Default::default()
         };
 
-        let controller_builder = ControllerBuilder::new(operator).with_params(params);
+        let controller_builder = ControllerBuilder::new(operator).with_config(params);
         let mut manager = Manager::new(&self.kube_config);
         manager.register_controller(controller_builder);
         let operator_task = manager.start().boxed();

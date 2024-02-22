@@ -7,6 +7,7 @@ use k8s_openapi::api::core::v1::{
     Volume as KubeVolume, VolumeProjection,
 };
 use k8s_openapi::Resource;
+use k8s_openapi::*;
 use tracing::warn;
 
 use super::*;
@@ -30,10 +31,26 @@ struct ServiceAccountSource {
     pod_uid: String,
 }
 
+fn create_service_account_token(
+    name: &str,
+    namespace: &str,
+    body: &TokenRequest,
+) -> anyhow::Result<http::Request<Vec<u8>>> {
+    let url = format!("/api/v1/namespaces/{namespace}/serviceaccounts/{name}/token?",
+                      name = urlencoding::encode(name),
+                      namespace = urlencoding::encode(namespace),
+    );
+
+    let request = http::Request::post(url);
+    let body = serde_json::to_vec(body)?;
+    let request = request.header(http::header::CONTENT_TYPE, http::header::HeaderValue::from_static("application/json"));
+    Ok(request.body(body)?)
+}
+
 impl ServiceAccountSource {
     async fn mount_at(&mut self, path: impl AsRef<Path>) -> anyhow::Result<()> {
         // As far as I can tell, this is the only way to access the token subresource on service accounts
-        let (req, _) = TokenRequest::create_namespaced_service_account_token(
+        let req = create_service_account_token(
             &self.service_account_name,
             &self.namespace,
             &TokenRequest {
@@ -48,8 +65,7 @@ impl ServiceAccountSource {
                     }),
                 },
                 ..Default::default()
-            },
-            Default::default(),
+            }
         )?;
         // Get the token from the API
         let token_resp: TokenRequest = self.client.request(req).await?;

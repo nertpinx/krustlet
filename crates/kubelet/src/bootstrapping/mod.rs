@@ -2,10 +2,10 @@ use std::{convert::TryFrom, env, io, path::Path, str};
 
 use futures::{StreamExt, TryStreamExt};
 use k8s_openapi::api::certificates::v1::CertificateSigningRequest;
-use kube::api::{Api, ListParams, PostParams};
+use kube::api::{Api, PostParams};
 use kube::config::Kubeconfig;
 use kube::Config;
-use kube_runtime::watcher::{watcher, Event};
+use kube_runtime::watcher::{self, watcher, Event};
 use rcgen::{
     Certificate, CertificateParams, DistinguishedName, DnType, KeyPair, SanType,
     PKCS_ECDSA_P256_SHA256,
@@ -64,16 +64,19 @@ async fn bootstrap_auth<K: AsRef<Path>>(
             .ok_or_else(|| {
                 anyhow::anyhow!("Unable to find cluster information in bootstrap config")
             })?;
-        let server = named_cluster.cluster.server;
+        let cluster = named_cluster.cluster
+            .ok_or_else(|| anyhow::anyhow!("Cluster information from bootstrap config is empty"))?;
+        let server = cluster.server
+            .ok_or_else(|| anyhow::anyhow!("Server information from bootstrap config is empty"))?;
         trace!(%server, "Identified server information from bootstrap config");
 
-        let ca_data = match named_cluster.cluster.certificate_authority {
+        let ca_data = match cluster.certificate_authority {
             Some(certificate_authority) => {
                 base64::encode(read(certificate_authority).await.map_err(|e| {
                     anyhow::anyhow!(format!("Error loading certificate_authority file: {}", e))
                 })?)
             }
-            None => match named_cluster.cluster.certificate_authority_data {
+            None => match cluster.certificate_authority_data {
                 Some(certificate_authority_data) => certificate_authority_data,
                 None => {
                     return Err(anyhow::anyhow!(
@@ -118,7 +121,7 @@ async fn bootstrap_auth<K: AsRef<Path>>(
         // Wait for CSR signing
         let inf = watcher(
             csrs,
-            ListParams::default().fields(&format!("metadata.name={}", config.node_name)),
+            watcher::Config::default().fields(&format!("metadata.name={}", config.node_name)),
         );
 
         let mut watcher = inf.boxed();
@@ -233,7 +236,7 @@ async fn bootstrap_tls(
     // Wait for CSR signing
     let inf = watcher(
         csrs,
-        ListParams::default().fields(&format!("metadata.name={}", csr_name)),
+        watcher::Config::default().fields(&format!("metadata.name={}", csr_name)),
     );
 
     let mut watcher = inf.boxed();
