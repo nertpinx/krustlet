@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mrsvc
+  labels:
+    app.kubernetes.io/name: mrsvc
+spec:
+  containers:
+  - name: micrustervice
+    image: quay.io/nertpinx/micrustervice
+    ports:
+      - containerPort: 8000
+        name: mrsvc-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mrsvc
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: mrsvc
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: mrsvc-port
+    nodePort: 30000

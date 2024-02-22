@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: goer
+  name: goer
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: goer
+  template:
+    metadata:
+      labels:
+        app: goer
+    spec:
+      containers:
+      - image: quay.io/nertpinx/micrustervice
+        name: micrustervice

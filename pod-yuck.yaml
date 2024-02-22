@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mocktest
+  labels:
+    app.kubernetes.io/name: mocktest
+spec:
+  containers:
+  - name: micrustervice
+    image: quay.io/nertpinx/micrustervice
+  nodeSelector:
+    type: krustlet
+  tolerations:
+  - key: kubernetes.io/arch
+    value: amd64
+    effect: NoSchedule
+    operator: Equal
+  - key: kubernetes.io/arch
+    value: amd64
+    effect: NoExecute
+    operator: Equal

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: stopper
+  name: stopper
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stopper
+  template:
+    metadata:
+      labels:
+        app: stopper
+    spec:
+      containers:
+      - image: quay.io/nertpinx/micrustervice
+        name: micrustervice
+      nodeSelector:
+        type: krustlet
+      tolerations:
+      - key: kubernetes.io/arch
+        value: amd64
+        effect: NoSchedule
+        operator: Equal
+      - key: kubernetes.io/arch
+        value: amd64
+        effect: NoExecute
+        operator: Equal

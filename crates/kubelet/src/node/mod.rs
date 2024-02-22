@@ -125,6 +125,14 @@ pub async fn create<P: Provider>(client: &kube::Client, config: &Config, provide
     builder.add_address("InternalIP", &format!("{}", config.node_ip));
     builder.add_address("Hostname", &config.hostname);
 
+    builder.add_allocatable("devices.kubevirt.io/kvm", "1k");
+    builder.add_allocatable("devices.kubevirt.io/tun", "1k");
+    builder.add_allocatable("devices.kubevirt.io/vhost-net", "1k");
+
+    builder.add_capacity("devices.kubevirt.io/kvm", "1k");
+    builder.add_capacity("devices.kubevirt.io/tun", "1k");
+    builder.add_capacity("devices.kubevirt.io/vhost-net", "1k");
+
     builder.set_port(config.server_config.port as i32);
 
     match provider.node(&mut builder).await {

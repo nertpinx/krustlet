@@ -1,22 +1,28 @@
-use crate::{PodState, ProviderState};
-use kubelet::pod::state::prelude::*;
+//! Pod was deleted.
 
-/// Pod was deleted.
-#[derive(Default, Debug)]
-pub struct Completed;
+use tracing::*;
+
+use super::*;
+
+#[derive(Debug, Default)]
+pub struct Terminated {}
 
 #[async_trait::async_trait]
-impl State<PodState> for Completed {
+impl State<PodState> for Terminated {
     async fn next(
         self: Box<Self>,
         _provider_state: SharedState<ProviderState>,
         _pod_state: &mut PodState,
-        _pod: Manifest<Pod>,
+        pod: Manifest<Pod>,
     ) -> Transition<PodState> {
+        let pod = pod.latest();
+
+        info!("Stopping pod {}", pod.name());
+
         Transition::Complete(Ok(()))
     }
 
     async fn status(&self, _pod_state: &mut PodState, _pod: &Pod) -> anyhow::Result<PodStatus> {
-        Ok(make_status(Phase::Succeeded, "Completed"))
+        Ok(make_status(Phase::Succeeded, "Terminated"))
     }
 }
