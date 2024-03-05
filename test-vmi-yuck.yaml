@@ -3,8 +3,8 @@ apiVersion: kubevirt.io/v1
 kind: VirtualMachineInstance
 metadata:
   labels:
-    special: testik
-  name: testik
+    special: testik-yuck
+  name: testik-yuck
 spec:
   domain:
     devices:
