@@ -23,7 +23,7 @@ impl State<PodState> for Registered {
 
         tracing::Span::current().record("pod_name", &pod.name());
 
-        if pod_state.waited < 5 {
+        if pod_state.waited < 1 {
             info!("Only waited {} times, wait again", pod_state.waited);
             tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
             pod_state.waited += 1;
