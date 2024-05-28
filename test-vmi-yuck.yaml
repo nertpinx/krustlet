@@ -15,9 +15,6 @@ spec:
       - disk:
           bus: virtio
         name: cloudinitdisk
-      - disk:
-          bus: virtio
-        name: emptydisk
     resources:
       requests:
         memory: 128Mi
@@ -32,9 +29,6 @@ spec:
 
         echo 'printed from cloud-init userdata'
     name: cloudinitdisk
-  - emptyDisk:
-      capacity: 10Mi
-    name: emptydisk
   nodeSelector:
     type: krustlet
   tolerations:
